@@ -10,7 +10,7 @@ after_initialize do
       @user = fetch_user_from_params
       guardian.ensure_can_delete_user!(@user)
 
-      UserDestroyer.new(current_user).destroy(@user, delete_posts: true, context: params[:context], prepare_for_destroy: true)
+      UserDestroyer.new(current_user).destroy(@user, delete_posts: true, context: params[:context], prepare_for_destroy: true, transaction: false)
 
       render json: success_json
     end
