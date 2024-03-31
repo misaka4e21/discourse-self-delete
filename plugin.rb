@@ -7,7 +7,7 @@
 after_initialize do
   plugin = Plugin::Instance.new
   cb = Proc.new do |user, guardian, opts|
-    Post.where(user_id: user.id).delete_all
+    Post.where(user_id: user.id).update(deleted_by_id: 0, deleted_at: DateTime.new(1970, 1, 1, 0, 0, 0))
   end
   plugin.register_user_destroyer_on_content_deletion_callback(cb)
 end
