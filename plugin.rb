@@ -5,9 +5,14 @@
 # url: https://github.com/misaka4e21/discourse-self-delete
 
 after_initialize do
-  plugin = Plugin::Instance.new
-  cb = Proc.new do |user, guardian, opts|
-    Post.where(user_id: user.id).update(deleted_by_id: 0, deleted_at: DateTime.new(1970, 1, 1, 0, 0, 0))
+  UsersController.class_eval do
+    def destroy
+      @user = fetch_user_from_params
+      guardian.ensure_can_delete_user!(@user)
+
+      UserDestroyer.new(current_user).destroy(@user, delete_posts: true, context: params[:context], prepare_for_destroy: true)
+
+      render json: success_json
+    end
   end
-  plugin.register_user_destroyer_on_content_deletion_callback(cb)
 end
