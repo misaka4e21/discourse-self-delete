@@ -5,17 +5,9 @@
 # url: https://github.com/misaka4e21/discourse-self-delete
 
 after_initialize do
-  module ::PostGuardian
-    def can_delete_all_posts?(user)
-      return false if anonymous?
-      super(user) || user.id == @user.id
-    end
+  plugin = Plugin::Instance.new
+  cb = Proc.new do |user, guardian, opts|
+    Post.where(user_id: user.id).destroy_all
   end
-
-  module ::TopicGuardian
-    def can_delete_topic?(topic)
-      return false if anonymous?
-      super(topic) || topic.user_id == @user.id
-    end
-  end
+  plugin.register_user_destroyer_on_content_deletion_callback(cb)
 end
