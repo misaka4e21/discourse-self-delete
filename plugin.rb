@@ -1,18 +1,32 @@
 # name: discourse-self-delete
 # about: A sample plugin allows self account deletion.
-# version: 0.1
+# version: 0.2
 # authors: Misaka 0x4e21
 # url: https://github.com/misaka4e21/discourse-self-delete
 
 after_initialize do
-  UsersController.class_eval do
-    def destroy
-      @user = fetch_user_from_params
-      guardian.ensure_can_delete_user!(@user)
+  TopicGuardian.module_eval do
+    def can_delete_topic?(topic)
+      return false if topic&.user&.admin?
+      is_staff? || is_category_group_moderator?(topic.category) || is_my_own?(topic)
+    end
+  end
+  PostGuardian.module_eval do
+    def can_delete_all_posts?(user)
+      return false if !is_me?(user) && user&.admin?
+      !user.nil? && (is_staff? || @user == user)
+    end
 
-      UserDestroyer.new(current_user).destroy(@user, delete_posts: true, context: params[:context], prepare_for_destroy: true, transaction: false)
+    def can_delete_post?(post)
+      return false if !is_me?(post&.user) && post&.user&.admin?
+      is_staff? || is_category_group_moderator?(post&.topic&.category) || is_my_own?(post)
+    end
+  end
+  UserGuardian.module_eval do
+    def can_delete_user?(user)
+      return false if user.nil? || user&.admin?
 
-      render json: success_json
+      is_me?(user) || is_staff?
     end
   end
 end
