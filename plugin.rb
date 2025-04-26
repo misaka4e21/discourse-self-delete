@@ -7,7 +7,7 @@
 after_initialize do
   TopicGuardian.module_eval do
     def can_delete_topic?(topic)
-      return false if topic&.user&.admin? && !is_my_own?(topic)
+      return false if topic&.user&.admin? && !is_my_own?(topic) && topic&.user_id > 0
       is_staff? || is_category_group_moderator?(topic.category) || is_my_own?(topic)
     end
   end
@@ -18,7 +18,7 @@ after_initialize do
     end
 
     def can_delete_post?(post)
-      return false if !is_me?(post&.user) && post&.user&.admin?
+      return false if !is_me?(post&.user) && post&.user&.admin? && post&.user_id > 0
       is_staff? || is_category_group_moderator?(post&.topic&.category) || is_my_own?(post)
     end
   end
